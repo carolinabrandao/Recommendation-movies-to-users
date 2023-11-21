@@ -3,9 +3,6 @@ import numpy as np
 
 #receive files as args
 import sys
-ratings_file = sys.argv[1]
-content_file = sys.argv[2]
-targets_file = sys.argv[3]
 
 
 class DataLoader:
@@ -147,32 +144,41 @@ class OutputGenerator:
             print(f'{row["UserId"]},{row["ItemId"]}')
 
 
-# Main code starts here
-# Initialize and load data
-data_loader = DataLoader(ratings_file, content_file, targets_file)
-df_ratings, df_content, df_targets = data_loader.load_data()
+def main(ratings_file, content_file, targets_file):
+    # Initialize and load data
+    data_loader = DataLoader(ratings_file, content_file, targets_file)
+    df_ratings, df_content, df_targets = data_loader.load_data()
 
-# Preprocess data and get necessary details for model training
-unique_users = df_ratings['UserId'].unique()
-unique_items = df_ratings['ItemId'].unique()
-user_to_index = {user: i for i, user in enumerate(unique_users)}
-item_to_index = {item: i for i, item in enumerate(unique_items)}
-user_indices = df_ratings['UserId'].map(user_to_index).values
-item_indices = df_ratings['ItemId'].map(item_to_index).values
-ratings = df_ratings['Rating'].values
+    # Preprocess data and get necessary details for model training
+    unique_users = df_ratings['UserId'].unique()
+    unique_items = df_ratings['ItemId'].unique()
+    user_to_index = {user: i for i, user in enumerate(unique_users)}
+    item_to_index = {item: i for i, item in enumerate(unique_items)}
+    user_indices = df_ratings['UserId'].map(user_to_index).values
+    item_indices = df_ratings['ItemId'].map(item_to_index).values
+    ratings = df_ratings['Rating'].values
 
-# Initialize and train the recommender model
-recommender_model = RecommenderModel(len(unique_users), len(unique_items))
-recommender_model.train_model(user_indices, item_indices, ratings)
+    # Initialize and train the recommender model
+    recommender_model = RecommenderModel(len(unique_users), len(unique_items))
+    recommender_model.train_model(user_indices, item_indices, ratings)
 
-# Attach user and item indices mappings to the model for prediction use
-recommender_model.user_to_index = user_to_index
-recommender_model.item_to_index = item_to_index
+    # Attach user and item indices mappings to the model for prediction use
+    recommender_model.user_to_index = user_to_index
+    recommender_model.item_to_index = item_to_index
 
-# Process predictions
-prediction_processor = PredictionProcessor(df_content, df_targets, recommender_model)
-prediction_processor.process_predictions()
+    # Process predictions
+    prediction_processor = PredictionProcessor(df_content, df_targets, recommender_model)
+    prediction_processor.process_predictions()
 
-# Generate output
-output_generator = OutputGenerator(prediction_processor.df_targets)
-output_generator.generate_output()
+    # Generate output
+    output_generator = OutputGenerator(prediction_processor.df_targets)
+    output_generator.generate_output()
+
+if __name__ == "__main__":
+    # Get the file paths from command line arguments
+    ratings_file = sys.argv[1]
+    content_file = sys.argv[2]
+    targets_file = sys.argv[3]
+
+    # Call the main function
+    main(ratings_file, content_file, targets_file)
